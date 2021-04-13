@@ -36,6 +36,9 @@ class ObservationPlanner:
                 ).transform_to(self.__dark_altazframe).alt
             
     def plot_alt_vs_hours(self, extra_coords = None):
+        plt.figure(figsize=(9, 5))
+        plt.grid(True)
+        plt.title("Midnight at {} UTC".format(str(self.__midnight)))
         if extra_coords is not None:
             for ra_str, dec_str in extra_coords:
                 plt.plot(self.__dark_delta, SkyCoord(
@@ -47,7 +50,7 @@ class ObservationPlanner:
 
         plt.fill_between(self.__delta_midnight, 0, 90, self.__sunaltazs.alt < -0*u.deg, color='0.5', zorder=0)
         plt.fill_between(self.__delta_midnight, 0, 90, self.__astro_twilight, color='k', zorder=0)
-
+ 
         plt.legend(loc='lower left')
         plt.xlim(-12, 12)
         plt.xticks(np.arange(13)*2 -12)
