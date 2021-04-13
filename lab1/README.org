@@ -81,9 +81,9 @@
   The code used to produce the graphs and process the data is
   available on GitHub at
   https://github.com/wdecay/ASTR480/tree/master/lab1. The relevant
-  files are ~lab1.ipynb~ and ~observation.py~. The latter contains a
-  relatively generic code which can be used to produce graphs similar
-  to the ones presented here for an arbitrary set of objects.
+  files are ~analysis.ipynb~ and ~observation.py~. The latter contains
+  a relatively generic code which can be used to produce graphs
+  similar to the ones presented here for an arbitrary set of objects.
 
   Currently, the repo is public. Please sent me your GitHub ID and I
   will make it private and share it with you. I prefer writing my code
