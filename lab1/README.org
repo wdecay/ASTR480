@@ -48,7 +48,7 @@
   (altitude greater than zero) during the astronomical twilight
   window.
 
-  An Astropy-assistent calculation showed that of these 50 object all
+  An Astropy-assisted calculation showed that of these 50 object all
   reached the altitude above $\SI{69}{\degree}$ and several the
   altitude above $\SI{80}{\degree}$. The highest altitude was also
   reached past midnight with the Moon blow the horizon making for
@@ -56,10 +56,23 @@
 
   To reduce the dataset down to 10 objects, KOIs with the shortest
   orbital period were selected. Their altitudes vs time are shown in
-  the figure below. As can be seen, they are indeed fairly close to
-  each other on the sky.
+  the following figure and table below. As can be seen, they are
+  indeed fairly close to each other on the sky.
 
   [[./day_1_objects.png]]
+
+| Name           | Period, days | RA           | DEC          |    Mag | Max. alt. | Visible |
+|----------------+--------------+--------------+--------------+--------+-----------+---------|
+| Kepler-10 b    |     0.837491 | 19h02m43.05s | +50d14m28.7s | 10.961 |        70 | True    |
+| Kepler-13 b    |     1.763588 | 19h07m53.09s | +46d52m06.1s |  9.958 |        74 | True    |
+| Kepler-1349 b  |     2.128216 | 19h05m21.20s | +48d44m38.8s | 11.126 |        72 | True    |
+| Kepler-65 b    |     2.154911 | 19h14m45.29s | +41d09m04.2s | 11.018 |        79 | True    |
+| Kepler-2 b     |     2.204735 | 19h28m59.35s | +47d58m10.3s | 10.463 |        72 | True    |
+| Kepler-408 b   |     2.465024 | 18h59m08.69s | +48d25m23.6s |  8.769 |        72 | True    |
+| Kepler-1 b     |     2.470613 | 19h07m14.03s | +49d18m59.0s | 11.338 |        71 | True    |
+| Kepler-21 A b  |     2.785821 | 19h09m26.84s | +38d42m50.5s |  8.224 |        82 | True    |
+| Kepler-444 A b |     3.600117 | 19h19m00.55s | +41d38m04.6s |  8.717 |        79 | True    |
+| Kepler-1658 b  |     3.849372 | 19h37m25.57s | +38d56m50.6s | 11.432 |        79 | True    |
 
 * Observations a month later
   It is easy to generate another altitude vs time graph for the same
