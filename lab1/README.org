@@ -51,7 +51,7 @@
   An Astropy-assisted calculation showed that of these 50 object all
   reached the altitude above $\SI{69}{\degree}$ and several the
   altitude above $\SI{80}{\degree}$. The highest altitude was also
-  reached past midnight with the Moon blow the horizon making for
+  reached past midnight with the Moon below the horizon making for
   favorable observational conditions.
 
   To reduce the dataset down to 10 objects, KOIs with the shortest
