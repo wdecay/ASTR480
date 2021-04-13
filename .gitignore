@@ -1,4 +1,6 @@
 *.csv
+*.pdf
+*.tex
 .ipynb_checkpoints/*
 __pycache__/*
 
