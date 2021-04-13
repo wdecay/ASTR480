@@ -1,0 +1,76 @@
+#+TITLE: ASTR480: Lab 1 report
+#+SETUPFILE: C:/Users/andre/AppData/Roaming/org/hw_setup.org
+
+* Object type and catalog
+  I want to observe Kepler objects of interest (KOI). The full catalog
+  (NASA Exoplanet Archive) in the CSV format is available at
+  https://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=cumulative
+  and the columns are documented at
+  https://exoplanetarchive.ipac.caltech.edu/docs/API_kepcandidate_columns.html
+* Observatory assignment & observing window
+  According to the first letter of my last name, the observatory
+  assignment is McDonald Observatory, Texas.
+
+  Observations are planned for May 14th, 2021. I'm interpreting this
+  as follows: the observation windows starts at the beginning of the
+  astronomical twilight on May 14th local time (CDT) and continues
+  until the end of the astronomical twilights on May 15th.
+* Moon interference
+  At midnight of the observation window the phase angle of the moon
+  was estimated at about $\SI{143}{\degree}$. Apparently, Astroplan
+  doesn't follow the sign convention for the phase angle, and it is
+  not possible to distinguish between waning and waxing phases. It
+  does, however, allow to determine the illuminated portion, which was
+  estimated at about $10\%$. (Other online tools report that the Moon
+  will be in the waxing crescent phase on that day).
+
+  [[./day_1.png]]
+
+  From the altitude vs. time graph, we can see that the Moon will not
+  reach an altitude higher than about $\SI{15}{\degree}$ above the
+  horizon on the night of May 14th and will be below the horizon about
+  half an hour prior to midnight. This, combined with a relatively low
+  illumination of the Lunar disk, means that the Moon will not
+  interfere with the observations in a significant way as long as we
+  are not trying to observe a low-altitude object close to the Moon
+  before midnight. The best time is after the moonset (i.e., roughly
+  after midnight).
+* Visible objects
+  The initial dataset consisted of 50 brighest KOIs that have been
+  confirmed to be planetary systems. The Kepler space telescope had a
+  fixed field of view against the sky with the center at about RA 19h
+  22m 40s DEC +44 30' 00". This means that there's not a lot of spread
+  in the locations of the KOIs and if one of them is visible, most
+  likely so are the rest. This makes the task easier, but the code
+  wasn't written with such assumption and will be applicable to
+  datasets with arbitrarily spread-out objects.
+
+  An Astropy-assistent calculation showed that of these 50 object all
+  reached the altitude above $\SI{69}{\degree}$ and several the
+  altitude above $\SI{80}{\degree}$. The highest altitude was also
+  reached past midnight with the Moon blow the horizon making for
+  favorable observational conditions.
+
+  To reduce the dataset down to 10 objects, KOIs with the shortest
+  orbital period were selected. Their altitudes vs time are shown in
+  the figure below. As can be seen, they are indeed fairly close to
+  each other on the sky.
+
+  [[./day_1_objects.png]]
+
+* Observations a month later
+  It is easy to generate another altitude vs time graph for the same
+  10 objects for a date a month later. The Moon's illumination,
+  according to Astroplan will be about $21\%$, and the moonset is a
+  little less than an hour past midnight. The drawbacks of observing
+  on this day are that the Moon is a little brighter and visible for
+  slightly longer than before; and the night is a little shorter. This
+  can all be seen in the graph below.
+  
+  [[./day_2_objects.png]]
+
+  The good news, however, is that the KOIs culminate during the
+  observation window with the Moon off the sky. All in all, it appears
+  that the conditions a month later are slightly better than before
+  because there's a good opportunity to observe the KOIs through the
+  lowest possible airmass.
