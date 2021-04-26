@@ -1,0 +1,238 @@
+#+TITLE: ASTR480: Lab 2 report
+#+SETUPFILE: C:/Users/andre/AppData/Roaming/org/hw_setup.org
+#+LATEX_HEADER: \usepackage{float}
+#+OPTIONS: H:3
+
+* General comments
+  In what follows, ~astropy~ was used to handle the FITS files. Note
+  that when displayed via ~matplotlib~, the images appear flipped
+  along the vertical axis compared to how tools like QFitsView render
+  them. It is easy to correct for that, but I chose not to. The code
+  pertinent to this analysis is posted under
+  [[https://github.com/wdecay/ASTR480/tree/master/lab2]].
+* Section 1: Examining fits files
+** Question 1
+   Figures [[fig:frm]] and [[fig:fr]] show some of the features present in the
+   flat image. Some of the most obvious ones are the dark overscan
+   region going from top to bottom in the middle, a thin horizontal
+   strip of dark pixels in the middle, various defects of the CCD
+   (like that shown in Figure [[fig:fr]], Region #3), and the noise which
+   becomes apparent when zooming in on a specific region.
+   
+   #+CAPTION: Flat image with regions.
+   #+ATTR_LATEX: :width 0.7\linewidth
+   #+LABEL: fig:frm
+   [[file:img/flat_region_map.png]]
+
+   #+CAPTION: Enlarged regions of the flat image.
+   #+ATTR_LATEX: :width 0.7\linewidth :placement [H]
+   #+LABEL: fig:fr   
+   [[file:img/flat_regions.png]]
+
+   The brightness of the pixels is not uniform even across the bright
+   spot. There are several reasons for that. One reason is related to
+   diffraction effects closer to the edges of the projected frame
+   created by the vignette filter. Another reason has to do with the
+   fact that CCDs often exhibit a systematic pixel-to-pixel structure,
+   which manifests itself in hot or dead pixels (or entire strips
+   thereof), as well as more subtle variations of the pixels' quantum
+   efficiency across different regions.
+
+** Question 2
+   The table below presents the statistics of the regions shown in
+   Figure [[fig:fr]].
+   
+| Region | Number of pixels |         Mean | Standard Deviation |
+|--------+------------------+--------------+--------------------|
+| #1     |            10000 | 41306.996600 |         174.056696 |
+| #2     |            10000 | 41078.176700 |        5818.827523 |
+| #3     |            12000 | 42253.985333 |        1147.204912 |
+| #4     |            20000 |   352.360000 |           3.736910 |
+** Question 3
+   All the histograms in Figure [[fig:hf]] show normal distributions of
+   noise centered roughly around the median. Regions #2 and #3 had
+   dark outliers from the overscan and the horizontal stitch, which
+   shifted the mean to the left. By comparing region #4 with the rest,
+   we see that the signal to noise ratio is approximately Poissonian
+   with the noise being of the order of $\sqrt{N}$.
+   
+   #+CAPTION: Histograms of the regions from the flat image.
+   #+CAPTION: Vertical lines represent the mean (solid) and the median (dashed).
+   #+ATTR_LATEX: :width 0.8\linewidth :placement [H]
+   #+LABEL: fig:hf
+   [[file:img/flat_histograms.png]]
+
+   The widths of the distributions describing regions #1-#3
+   (discarding the outliers) are similar[fn:width]; however, the
+   distributions are centered around different medians. The reason for
+   that is that these three regions are located (at least partially)
+   on different quadrants on the CCD chip. These quadrants may be read
+   out independently, which means that the bias voltages may
+   vary. Note that the selected overscan region contains pixels from
+   all four quadrants. Generally, 4 different overscan regions (easily
+   seen in Figure [[fig:fr]], Region #4) should be characterized
+   independently.
+
+[fn:width] It is evident that the distribution describing region #2 is
+   a little wider than the distributions describing regions #1 and
+   #3. This, at least in part, has to do with the fact that the
+   quadrant in the bottom right corner seems to be more brighter than
+   the rest, possibly due to higher bias voltage during read-out. This
+   manifests in a noticeably greater median and higher Poissonian
+   noise.
+** Question 4
+   Figure [[fig:rmb]] shows regions of different sizes on the bias image
+   and the table below presents the statistics of these regions.
+   #+CAPTION: Bias image with regions.
+   #+ATTR_LATEX: :width 0.7\linewidth :placement [H]
+   #+LABEL: fig:rmb   
+   [[file:img/bias_region_map.png]]
+   
+| Region | Number of pixels |       Mean | Standard Deviation |
+|--------+------------------+------------+--------------------|
+| #1     |             25.0 | 257.280000 |           1.908298 |
+| #2     |            900.0 | 257.245556 |           2.137686 |
+| #3     |           8100.0 | 257.330123 |           2.191376 |
+| #4     |          72900.0 | 257.364911 |           2.185746 |
+| #5     |        1500000.0 | 259.678465 |           7.139645 |
+| #6     |         810000.0 | 263.308036 |           9.645201 |
+** Question 5
+   The first 4 regions are within the same quadrant and for that
+   reason there's only a small drift of the mean value as the size of
+   the region gets larger. The standard deviation of the first 4
+   regions also doesn't substantially differ. As for the largest
+   region #5, there's a substantial increase in the standard deviation
+   and a shift of mean by a little more than 2. The reason is that
+   this region includes all for quadrants on the CCD, each having its
+   own statistical properties. In short, the distribution describing
+   region #5 is a combination of 4 different distributions pertaining
+   to each of the quadrants. This, in fact, can be seen from the
+   histograms describing quadrants #4 and #6 in Figure [[fig:bh]]. By
+   adding these distributions centered around different mean values,
+   we would get approximately the distribution of region #5 which is
+   wider than all its constituents. Apparently the forth quadrant has
+   many hot pixels, which is the reason its standard deviation is much
+   higher than that of the rest.
+   #+CAPTION: Histograms of the regions from the bias image.
+   #+CAPTION: Vertical lines represent the mean (solid) and the median (dashed).
+   #+ATTR_LATEX: :width 0.8\linewidth :placement [H]
+   #+LABEL: fig:bh
+   [[file:img/bias_histograms.png]]
+* Section 2: Headers
+** HCG 79
+  #+CAPTION: HCG 79.
+  #+ATTR_LATEX: :width 0.7\linewidth :placement [H]
+  #+LABEL: fig:hcg
+  [[file:img/hcg79.png]]
+*** Question 6
+    From the header, we find that the telescope use is the APO 3.5m
+    with the "Wash M" filter. I suppose that stands for the Washington
+    vignette filter whose effect can be see in Figure [[fig:hcg]]. The
+    instrument is specified as "arctic" which is a general purpose,
+    visible-wavelength CCD camera.
+*** Question 7
+    The RA and DEC from the header are:
+#+BEGIN_EXAMPLE
+RA      = '15:59:15.82'        / RA hours, extrapolated from TCC ObjNetPos      
+DEC     = '20:44:36.00'        / Dec degrees, extrapolated from TCC ObjNetPos   
+#+END_EXAMPLE
+    The coordinates given by NED are ~RA 15h59m11.9s~, ~DEC
+    +20d45m31s~. According to the ARC 3.5m ARCTIC
+    documentation [fn:arctic], the full field of view is somewhere on
+    the order of several arcmin per each side. The small discrepancy
+    accounts for the fact that HCG79 is not at the center of the FOV.
+
+    The following arc offsets can also be relevant, but I was not able
+    to find any comprehensive information on what exactly they
+    represent.
+#+BEGIN_EXAMPLE
+    ARCOFFX = +1.5278000000000E-02 / TCC arc offset X                               
+    ARCOFFY = -1.5278000000000E-02 / TCC arc offset Y                               
+#+END_EXAMPLE
+
+
+[fn:arctic] https://www.apo.nmsu.edu/arc35m/Instruments/ARCTIC/,
+    https://arc.apo.nmsu.edu/ARCinfo/Join/TeleInfo.pdf
+*** Question 8
+    The following 3 header fields are related to the CCD temperature.
+#+BEGIN_EXAMPLE
+CCDHEAD =                186.8 / CCD cold head temperature (K)                  
+CCDTEMP =                150.4 / CCD temperature (K)                            
+CCDHEAT =                 68.5 / CCD heater level (percent)    
+#+END_EXAMPLE
+    The CCD is cooled with liquid nitrogen.
+
+    The object being observed here is known as the Seyfert's Sextet
+    (HCG79), which is a group of galaxies about 190 million
+    light-years away. The shapes of these galaxies can be easily seen
+    in the bottom right quadrant in Figure [[fig:hcg]]. Figure
+    [[fig:hcg_zoom]] shows a silly false-color close-up of these galaxies.
+
+    #+CAPTION: Seyfert's Sextet (logarithmic colormap normalization).
+    #+ATTR_LATEX: :width 0.7\linewidth :placement [H]
+    #+LABEL: fig:hcg_zoom
+    [[file:img/hcg79_zoom.png]]
+*** Question 9
+    The astronomical features in Figure [[fig:hcg]] include the galaxies
+    mentioned earlier as well as some nearby stars, which are
+    obviously affected by the PSF. Small bright spots not smeared by
+    PSF are most likely cosmic ray hits which are inevitable at longer
+    exposures. The dark border is due to the vignette filter. The four
+    quadrants are a feature of the quad read-out mode. They don't
+    represent any physical separation of the CCD sensor (and of course
+    are instrumental features!).
+** NGC 2998
+  #+CAPTION: NGC 2998 through a diffraction grating.
+  #+ATTR_LATEX: :width 0.8\linewidth :placement [H]
+  #+LABEL: fig:ngc
+  [[file:img/ngc2998.png]]  
+*** Question 10
+    From the header, we find that the telescope use is the APO 3.5m
+    with an "Empty" filter (which most likely means there was no
+    filter). The instrument is specified as "DIS," which stand for
+    Dual Imaging Spectrograph; is it clear that Figure [[fig:ngc]]
+    represents a spectrum. The header also indicate that a diffraction
+    grating is present. Some of its parameters are:
+#+BEGIN_EXAMPLE
+GRATING = 'B400'               / Grating name                                   
+PIXSCAL2= +4.1400000000000E-01 / spatial coordinate pixel scale (arcsec/pixel)  
+DISPDW  = +1.8500000000000E+00 / Approximate dispersion, (A/pix)                
+DISPWC  = +4.3980000000000E+03 / Approximate center wavelength, (A)             
+LINESMM = +4.0000000000000E+02 / Grating lines/mm                               
+BLAZEANG= +9.9990000000000E+01 / Grating blaze angle 
+#+END_EXAMPLE
+*** Question 11
+    The RA and DEC from the header are:
+#+BEGIN_EXAMPLE
+RA      = '9:48:43.63'         / RA hours, extrapolated from TCC ObjNetPos      
+DEC     = '44:04:52.60'        / Dec degrees, extrapolated from TCC ObjNetPos   
+#+END_EXAMPLE
+    The coordinates given by NED are~ RA 09h48m43.632s~, ~DEC
+    +44d04m53.18s~. The discrepancy here is much smaller than in the
+    case of HCG79. Perhaps because the telescope is pointed directly
+    at the object without arc offsets. I don't know how exactly the
+    spectrograph is set up, but likely it only captures a small
+    fraction of the field of view at the center through a slit.
+*** Question 12
+    The following 2 header fields are related to the CCD temperature.
+#+BEGIN_EXAMPLE
+CCDTEMP = +1.7040000000000E+02 / CCD temperature (deg K)                     
+CCDHEAT = +1.0000000000000E+02 / CCD heater level (percent)
+#+END_EXAMPLE
+    The CCD temperature is $\SI{170.4}{\kelvin}$.
+
+    The object being observed here is known as the NGC 2998 barred
+    spiral galaxy about 195 million light-years away. Of course, the
+    galaxy itself cannot be seen on the spectrogram.
+*** Question 13
+    The only astronomical feature in Figure [[fig:ngc]] is the vertical
+    spectral lines from NGC 2998 (which I will not attempt to describe
+    without having access to a calibration spectrum). Some are
+    obviously emission lines (like the bright one roughly in the
+    middle), but some absorption lines are also prominent. All small
+    bright spots are from cosmic ray hits. Taking a spectrogram of a
+    faint object requires very long exposures. In this case, the
+    header tells us the exposure was $\SI{1800}{\second}$, or 30
+    minutes! That is the reason there are so many cosmic ray hits in
+    this image. Note that this image wasn't taking using the quad
+    read-out mode, so it has no visible "quadrants."

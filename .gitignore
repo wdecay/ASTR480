@@ -1,6 +1,7 @@
 *.csv
 *.pdf
 *.tex
+*.fits
 */.ipynb_checkpoints/*
 */__pycache__/*
-
+*/ltximg/*
