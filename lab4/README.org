@@ -1,0 +1,397 @@
+#+TITLE: ASTR480: Lab 4 report
+#+SETUPFILE: C:/Users/andre/AppData/Roaming/org/hw_setup.org
+#+LATEX_HEADER: \usepackage{float}
+#+OPTIONS: H:3
+
+* Introduction
+In this project we learn the characteristics of charge coupled devices
+(CCD) which are indispensable when acquiring astronomical data with
+telescopes. The data calalogued in Table [[tab:data]] was collected by
+other students using the science-grade ~ST-10XME~ (identified as ~SBIG
+ST-10 3 CCD Camera~ in the FITS headers) whose most relevant
+manufacturer specifications are given in Table [[tab:spec]].
+
+#+CAPTION: Data files and relevant FITS header information.
+#+NAME: tab:data
+| File name                          | EXPTIME | FILTER | IMAGETYP | CCD-TEMP |
+|------------------------------------+---------+--------+----------+----------|
+| ~480_2018_.Bias(0.0S0X1).01.fits~  |    0.12 | R      | Bias     |      0.2 |
+| ~480_2018_.Bias(0.0S0X1).02.fits~  |    0.12 | R      | Bias     |     -1.1 |
+| ~480_2018_.Bias(0.0S0X1).03.fits~  |    0.12 | R      | Bias     |      0.2 |
+| ~480_2018_.Bias(0.0S0X1).04.fits~  |    0.12 | R      | Bias     |      0.2 |
+| ~480_2018_.Bias(0.0S0X1).05.fits~  |    0.12 | R      | Bias     |      0.2 |
+| ~480_2018_.Bias(0.0S0X1).06.fits~  |    0.12 | R      | Bias     |     -0.2 |
+| ~480_2018_.Bias(0.0S0X1).07.fits~  |    0.12 | R      | Bias     |     -0.2 |
+| ~480_2018_.Bias(0.0S0X1).08.fits~  |    0.12 | R      | Bias     |     -0.2 |
+| ~480_2018_.Bias(0.0S0X1).09.fits~  |    0.12 | R      | Bias     |     -0.2 |
+| ~480_2018_.Bias(0.0S0X1).10.fits~  |    0.12 | R      | Bias     |     -0.2 |
+| ~480_2018_.Bias(0.0S0X1).11.fits~  |    0.12 | R      | Bias     |     -0.2 |
+| ~480_2018_.Flat.0S0X1.R.17.fits~   |    0.20 | R      | Flat     |     -0.2 |
+| ~480_2018_.Flat.0S0X1.R.16.fits~   |    0.50 | R      | Flat     |      0.2 |
+| ~480_2018_.Flat.1S0X1.R.18.fits~   |    1.00 | R      | Flat     |      0.2 |
+| ~480_2018_.Flat.5S0X1.R.19.fits~   |    5.00 | R      | Flat     |     -0.2 |
+| ~480_2018_.Flat.10S0X1.R.23.fits~  |   10.00 | R      | Flat     |     -0.2 |
+| ~480_2018_.Flat.20S0X1.R.24.fits~  |   20.00 | R      | Flat     |     -0.2 |
+| ~480_2018_.Flat.30S0X1.R.25.fits~  |   30.00 | R      | Flat     |      0.2 |
+| ~480_2018_.Flat.45S0X1.R.26.fits~  |   45.00 | R      | Flat     |      0.2 |
+| ~480_2018_.Flat.60S0X1.R.22.fits~  |   60.00 | R      | Flat     |      0.2 |
+| ~480_2018_.Flat.90S0X1.R.20.fits~  |   90.00 | R      | Flat     |     -0.2 |
+| ~480_2018_.Flat.100S0X1.R.15.fits~ |  100.00 | R      | Flat     |      0.2 |
+| ~480_2018_.Flat.110S0X1.R.14.fits~ |  110.00 | R      | Flat     |     -0.2 |
+| ~480_2018_.Flat.120S0X1.R.13.fits~ |  120.00 | R      | Flat     |     -0.2 |
+
+#+CAPTION: Specifications of the ST-10XME camera.
+#+NAME: tab:spec
+| CCD                                          | Kodak KAF-3200ME + TI TC-237 |
+| Pixel Array                                  | 2184 x 1472 pixels           |
+| CCD Size                                     | 14.9 x 10 mm                 |
+| Total Pixels                                 | 3.2 million                  |
+| Pixel Size                                   | 6.8 x 6.8 microns square     |
+| Full Well Capacity                           | ~77,000 e-                   |
+| Dark Current                                 | 0.5 e-/pixel/sec at 0 degrees C                             |
+| A/D Converter                                | 16 bits                      |
+| A/D Gain                                     | 1.3e-/ADU                    |
+| Read Noise                                   | 8.8e- RMS                    |
+
+In this report, we provide estimates of the gain and read noise;
+investigate the range of linearity of the CCD (where the output signal
+is proportional to the input); and finally study how the dark current
+depends on the sensor's temperature[fn:dc].
+
+In what follows, ~astropy~ was used to handle the FITS files and
+conduct the analysis. The source code will be available under
+[[https://github.com/wdecay/ASTR480/tree/master/lab4]].
+
+[fn:dc] The dark current study uses a different dataset taken with
+~SBIG ST-8XE~ detector.
+* Gain & Read Noise
+The gain is estimated using the formula
+#+NAME: eq:gain
+\begin{equation}
+\mathrm{Gain} = \frac{(\bar{F_1}+\bar{F_2}) - (\bar{B_1}+\bar{B_2})}{\sigma^2_{F_1 - F_2}-\sigma^2_{B_1 - B_2}},
+\end{equation}
+where $F_{1,2}$ and $B_{1,2}$ are different regions (of the same size
+and dimension) in, respectively, a flat field and bias frames. For
+this analysis, two different bias frames with the same CCD temperature
+(see Table [[tab:data]]) were used; namely,
+~480_2018_.Bias(0.0S0X1).03.fits~ and
+~480_2018_.Bias(0.0S0X1).05.fits~. Given that all flat field frames
+had been taken with different exposures, the two flat field regions
+were extracted from the same frame, ~480_2018_.Flat.20S0X1.R.24.fits~
+with the exposure time of $\SI{20}{\second}$ (at which the CCD behaves
+linearly). Figure [[fig:rgn]] shows a possible region arrangement on a
+flat field image.
+
+#+CAPTION: Flat field frame ~480_2018_.Flat.20S0X1.R.24.fits~ with two $120\times 120$ pixel regions.
+#+CAPTION: Region #1 was also used against the two bias frames.
+#+NAME: fig:rgn
+[[./img/regions.png]]
+
+Plugging in the statistics computed for the regions in Figure [[fig:rgn]]
+into Equation ([[eq:gain]]), we obtain
+\[
+\mathrm{Gain} = \frac{(8930.8 + 9014.7) - (1018.1 + 1018.9)}{113.1^2 - 12.0^2} \approx 1.26\ e^-/\mathrm{ADU}
+\]
+
+Read noise in electrons can be estimated as
+\[
+\mathrm{Read\ Noise} = \frac{\mathrm{Gain}\times\sigma_{(B_1 - B_2)}}{\sqrt{2}}
+= \frac{1.26\times 12.0}{\sqrt{2}} \approx 10.7e^-,
+\]
+which corresponds to the read noise of
+\[
+10.7e^- / 1.26\ e^-/\mathrm{ADU} \approx 8.5\ \mathrm{ADU}
+\]
+
+Results of identical calculations for various region sizes are given
+in Table [[tab:rs]]. It is evident that the gain is somewhere within the
+range between 1.25 and 1.35, in agreement with the
+$1.3e^-/\mathrm{ADU}$ value given specification (Table [[tab:spec]]). The
+estimated read noise of about $10.7e^-$, however, slightly exceeded
+the value given by the manufacturer ($8.8e^-$ RMS); this can be due to
+thermal effects or high-frequency noise in the power grid.
+
+#+CAPTION: Gain and read noise for various region sizes.
+#+NAME: tab:rs
+| Region size     | Gain, $e^-/\mathrm{ADU}$ | Read noise, $e^-$ | Read noise, ADU |
+|-----------------+--------------------------+-------------------+-----------------|
+| $50\times 50$   |                     1.35 |              11.7 |             8.7 |
+| $80\times 80$   |                     1.29 |              11.0 |             8.6 |
+| $100\times 100$ |                     1.25 |              10.7 |             8.5 |
+| $120\times 120$ |                     1.26 |              10.7 |             8.5 |
+| $200\times 200$ |                     1.24 |              10.4 |             8.4 |
+| $400\times 400$ |                     1.24 |              10.4 |             8.5 |
+
+* Linearity
+Mean pixel values and standard deviations for a series of flat field
+frames with different exposures were calculated for two different
+regions. The first region is marked as #2 in Figure [[fig:rgn]], whereas
+the second region (selected from the part of the flats exhibiting
+greatest saturation) is shown in Figure [[fig:sat]]. CCD characteristics
+based on these two regions are summarized in Tables [[tab:lin]], [[tab:linh]]
+and Figures [[fig:lin]], [[fig:linh]].
+
+The reason for using two different regions is that the data point
+corresponding to a $\SI{60}{\second}$ exposure in Table [[tab:lin]] and
+Figure [[fig:lin]] looks rather suspicious: extrapolating the linear
+behavior preceding $\SI{60}{\second}$ exposure would predict that the
+mean pixel value should not exceed 30000 ADU (which, according to
+Figure [[fig:linh]] is within the linear range of the CCD); however, it
+gets almost as high as 50000 ADU (Table [[tab:lin]]). Why did the sensor
+start behaving non-linearly much earlier than we would expect?
+
+  
+#+CAPTION: Statistics of the $120\times 120$ pixel region #2 (Figure [[fig:rgn]])
+#+CAPTION: for flat field frames taken with different exposures.
+#+NAME: tab:lin
+| Exposure, s | Mean value, ADU | Standard deviation, ADU |
+|-------------+-----------------+-------------------------|
+|         0.2 |            1168 |                      14 |
+|         0.5 |            1362 |                      18 |
+|         1.0 |            1898 |                      27 |
+|         5.0 |            5619 |                      60 |
+|        10.0 |            5770 |                      63 |
+|        20.0 |            9015 |                      83 |
+|        30.0 |           15295 |                     112 |
+|        45.0 |           20285 |                     134 |
+|        60.0 |           49601 |                     187 |
+|        90.0 |           51804 |                     119 |
+|       100.0 |           54047 |                     107 |
+|       110.0 |           55747 |                      93 |
+|       120.0 |           56785 |                      82 |
+#+TBLFM: $2 = round($2, 0) :: $3 = round($3, 0)
+
+#+CAPTION: Data from Table [[tab:lin]].
+#+NAME: fig:lin
+[[./img/linearity.png]]
+
+
+#+CAPTION: Selecting a region in the overexposed part of the frame gives a better idea about
+#+CAPTION: the behavior of the CCD.
+#+NAME: fig:sat
+[[./img/saturation.png]]
+
+
+#+CAPTION: Statistics of the $200\times 200$ pixel region shown in Figure [[fig:sat]]
+#+CAPTION: for flat field frames taken with different exposures.
+#+NAME: tab:linh
+| Exposure, s | Mean value, ADU | Standard deviation, ADU |
+|-------------+-----------------+-------------------------|
+|         0.2 |            1225 |                      16 |
+|         0.5 |            1476 |                      21 |
+|         1.0 |            2243 |                      36 |
+|         5.0 |            7704 |                     120 |
+|        10.0 |            7727 |                     117 |
+|        20.0 |           12129 |                     172 |
+|        30.0 |           21497 |                     316 |
+|        45.0 |           28327 |                     398 |
+|        60.0 |           57506 |                     404 |
+|        90.0 |           57593 |                     400 |
+|       100.0 |           57784 |                     430 |
+|       110.0 |           57820 |                     436 |
+|       120.0 |           57882 |                     443 |
+#+TBLFM: $2 = round($2, 0) :: $3 = round($3, 0)
+
+#+CAPTION: Data from Table [[tab:linh]].
+#+NAME: fig:linh
+[[./img/linearity_better.png]]
+
+Table [[tab:linh]] and Figure [[fig:linh]] provide a clue. About a third of
+the sensor (see Figure [[fig:sat]]) is already saturated in the
+$\SI{60}{\second}$ flat frame. This may affect the characteristics of
+the seemingly unsaturated areas of the image via effects such as
+blooming (the overflowing of excess electrons into adjacent pixels) or
+due to built-in (and often undocumented) mechanisms which protect the
+sensor from permanent damage. Note the strange peak in the standard
+deviation (Poissonian noise) at $\SI{60}{\second}$ Table [[tab:lin]] which
+is not present in the burned-out region (Table [[tab:linh]]). It is
+unclear what is the nature of this anomaly, but it may be related to
+the aforementioned built-in damage control or burn-out prevention
+mechanisms implemented by the manufacturer.
+
+It is worth mentioning that the flat fields data set could be improved
+by taking more "regular" images without such a significant difference
+in contrast; it also would have been useful to take more data points
+with exposures between $\SI{45}{\second}$ and $\SI{60}{\second}$ to
+better understand the transition from linear to non-linear regime.
+
+** Questions
+*** Importance of staying within the linear range of the CCD
+    Staying within the linear range allows direct comparison between
+    the brightness of different objects that appear in the image. For
+    example, if one star gives twice as much flux as the other and we
+    are operating in the linear regime, the ADU values corresponding
+    to each star will also exhibit the same ratio. Operating outside
+    the linear regime makes things more complicated as ADU values will
+    no longer correspond to the actual flux. Sometimes it may be
+    necessary to work somewhat outside of the linear range; in that
+    case CCD characteristics need to be taken into account during data
+    analysis. If possible, staying within the linear range is always
+    preferred.
+*** Full-well capacity vs ADU saturation
+    In 1x1 binning full-well capacity is reached first. This can be
+    seen in the data given in Table [[tab:linh]] and Figure [[fig:linh]]. ADU
+    saturation occurs when $N_{e^-}/\mathrm{Gain}$ exceeds
+    $2^{16}-1=65635$. We see, however, that the pixels saturate at
+    about 58000 ADU, which corresponds to $N_{e^-} \approx 76000$.
+    This matches the full well capacity of approximately 77000 given
+    in the specification (Table [[tab:spec]]).
+*** Linearity range of the detector
+    Based on the data presented in Tables [[tab:lin]] and [[tab:linh]], it is
+    reasonable to conclude the linearity range of this detector is
+    safely below 20000 ADU. Note that at short exposures and when the
+    counts are low, there's a "dark" zone, which based on the data may
+    extend up to 5000 ADU. The upper limit may go up to 30000 ADU (see
+    Figure [[fig:linh]]). Due to the flats' being irregular and as per the
+    above discussion, these conclusions are rather tentative. It does
+    appear, however, that the linear range should be roughly between
+    5000 and 30000 ADU during normal operation (i.e., in the absence
+    of excessive highlights in the frame).
+*** Different camera
+    The ADU saturation given a 16 bit A/D converter occurs at
+    \[
+    2^{16}\ \mathrm{ADU} \times 1.6e^-/\mathrm{ADU} \approx 105000.
+    \]
+    Thus we need to worry about ADU saturation and not about exceeding
+    the full-well capacity.
+
+    In the case of 2x2 binning, the effective full-well capacity
+    becomes $4\times 150000 = 600000$. The A/D converter is still
+    16-bin, so clearly ADU saturation would be reached first. It is,
+    however, not typically a problem as binning is useful when
+    observing fainter objects.
+
+*** Filters
+    Based on the quantum efficiency plot for the ~KAF-3200ME~ CCD
+    provided by the manufacturer, the camera is designed for visible
+    light. The efficiency drops drastically for UV light and is
+    effectively zero for wavelengths shorter than
+    $\SI{300}{\nano\meter}$. If observing in near UV with this camera,
+    it would make sense to use binning in order to minimize the effect
+    of read noise. Analogously, the quantum efficiency drops for near
+    infrared and reaches zero for wavelengths longer than
+    $\SI{1000}{nm}$. Therefore, when observing with either UV or IR
+    filters, ADU saturation will be much less likely (given reasonable
+    exposures and intensity) because the quantum efficiency of the
+    detector is substantially lower than that in the for visible
+    light. (The question was a little vague --- not exactly sure what
+    numbers 1 and 2 it was referring to. I assumed it was the previous
+    question about saturation.)
+
+* Dark Current
+  The input data and derived quantities used in this analysis are
+  summarized in Table [[tab:dc]]. To compute the list column, bias was
+  multiplied by gain ($2.3\ e^-/\mathrm{ADU}$) and divided by the
+  exposure time in seconds ($\SI{120}{\second}$).
+  
+#+CAPTION: Dark current measurements and derived quantities.
+#+NAME: tab:dc
+| $T$, $\SI{}{\celsius}$ | Bias, ADU/px | $T$, $\SI{}{\kelvin}$ | $x=1/T$, $\SI{}{\per\kelvin}$ | D, $e^-/\mathrm{px/s}$ |
+|------------------------+--------------+-----------------------+-------------------------------+------------------------|
+|                  -15.0 |           13 |                258.15 |                      0.003874 |               0.249167 |
+|                  -10.0 |           15 |                263.15 |                      0.003800 |               0.287500 |
+|                   -8.0 |           16 |                265.15 |                      0.003771 |               0.306667 |
+|                   -6.0 |           17 |                267.15 |                      0.003743 |               0.325833 |
+|                   -4.2 |           19 |                268.95 |                      0.003718 |               0.364167 |
+|                   -2.3 |           22 |                270.85 |                      0.003692 |               0.421667 |
+|                    0.0 |           24 |                273.15 |                      0.003661 |               0.460000 |
+|                    2.0 |           28 |                275.15 |                      0.003634 |               0.536667 |
+|                    3.6 |           32 |                276.75 |                      0.003613 |               0.613333 |
+|                    5.8 |           37 |                278.95 |                      0.003585 |               0.709167 |
+|                    8.2 |           43 |                281.35 |                      0.003554 |               0.824167 |
+|                   10.0 |           50 |                283.15 |                      0.003532 |               0.958333 |
+|                   12.8 |           62 |                285.95 |                      0.003497 |               1.188333 |
+|                   16.2 |           89 |                289.35 |                      0.003456 |               1.705833 |
+|                   20.0 |          139 |                293.15 |                      0.003411 |               2.664167 |
+
+We fit the function $D = Ke^{-bx}$ to the data from the last two
+columns of Table [[tab:dc]] is shown in Figure [[fig:dc]]. From the fit
+parameters, we determine that the band gap is
+\[
+E_g = 2k_Bb = 1.2\pm\SI{0.1}{\electronvolt},
+\]
+
+which reasonably well agrees with the accepted value of
+$\SI{1.1}{\electronvolt}$.
+#+CAPTION: Dark current vs $T^{-1}$. The data is from the two last columns in Table [[tab:dc]].
+#+NAME: fig:dc
+[[./img/dark_current.png]]
+** Questions
+*** Limiting cases for the dark current
+    From the equation,
+    \begin{equation}
+    D = 2.5\times10^{15} AI_dT^{1.5}e^{-E_g/2kT}
+    \end{equation}
+
+    it is easy to see that at high values of $T$, the exponential
+    becomes unity and $D\propto T^{1.5}$. This prediction, however, is
+    quite meaningless: at room temperature,
+    $kT\approx\SI{0.026}{electronvolt}$, so in order for the "high
+    temperature" behavior to set in we needs that $kT \gg E_g$, or $kT
+    \gg \SI{1.1}{\electronvolt}$. Clearly, even $kT =
+    \SI{1.1}{\electronvolt}$ corresponds to 42 times the room
+    temperature. That's hotter than the surface of the Sun!
+
+    At low temperatures (which is all reasonable temperatures), the
+    exponential dominates. This is the reason it was acceptable to
+    pack $T^{1.5}$ along with constants into the factor $K$.
+*** Curve fitting
+    SDL wasn't used in this analysis. However, the uncertainty of the
+    parameter $K$ was very high: the estimated value returned by
+    ~scipy~ was 77096185770 with the standard
+    deviation 103821309059. The standard deviation exceeds the value
+    itself by over 30% which is very poor accuracy. Essentially,
+    ~scipy~ fit the model such as to minimize the uncertainty in $b$,
+    which comes at the expense of the uncertainty in $K$. The main
+    reason for this is that the exponential becomes is very small,
+    which needs to be compensated by making $K$ very large. Hence the
+    high uncertainty.
+
+    It is also evident from Figure [[fig:dc]] that the model doesn't fit
+    the data at lower temperatures very well.
+
+*** Dark current at $\SI{0}{\celsius}$
+    The value corresponding $\SI{0}{\celsius}$ in Table [[tab:dc]] is
+    $0.46~e^-/\mathrm{px/s}$, which is about one half of the value
+    reported by the manufacturer. Note, that this is not an error in
+    the fitted function, but the actual
+    measurement. $1~e^-/\mathrm{px/s}$ is seen only when the
+    temperature gets close to $\SI{10}{\celsius}$.
+
+    There can be many possible reasons for this such as:
+    - using a very small region of the frame when computing the ADU
+      bias, or a region with a defect
+    - presence of ambient electric fields near the camera
+    - read noise is not Gaussian or there's a general tendency to
+      "lose" some electrons during the readout when the counts are
+      very low
+    - the manufacturer simply rounded the value off to 1 making it an
+      upper bound
+    - the exposure time was not accurately reported
+
+    Verifying the first and last hypotheses is easy if raw frames are
+    available; verifying the second one would require moving the
+    camera elsewhere and retaking the data. As for the third one, it
+    can be verified by making the exposure very long and making sure
+    more dark current electrons are accumulated.
+* Summary
+  There's no doubt that understanding the characteristics of CCD
+  sensors is vital when practicing observational astronomy. Errors
+  introduced into the data (for instance from using the sensor outside
+  of its linear range) will propagate into the data analysis and put
+  the validity of the predictions at risk. This project clearly
+  demonstrated that when astronomers understand how CCDs work, and
+  what are their limitations, they can make informed decisions about
+  their observation which in many cases can help avoid producing a
+  pile of digital garbage instead of useful data.
+
+  In this work, we investigated CCD gain and read noise and practiced
+  estimating them based on the statistics of regions taken from bias
+  and flat field frames; we explored the linearity of CCD, determined
+  the likely linear range of the ~ST-10XME~ camera, discussed
+  potential issues with the data and suggested their possible
+  explanations. Finally, we applied a variation of the Meyer-Neldel
+  rule to characterize the temperature dependence of the dark current
+  in a CCD and estimated the band gab in silicon by fitting a model to
+  the data.
+  
