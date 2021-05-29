@@ -1,0 +1,203 @@
+#+PROPERTY: header-args :exports none :tangle "C:/Users/andre/Documents/ASTR480/refs.bib"
+#+BLATEX_CLASS: aastex631
+#+LATEX_HEADER: \usepackage{biblatex} \DeclareFieldFormat{apacase}{#1} \addbibresource{C:/Users/andre/Documents/ASTR480/refs.bib}
+#+LATEX_HEADER: \usepackage{parskip}
+#+LATEX_HEADER: \usepackage{amssymb}
+#+LATEX_HEADER: \usepackage{amsmath}
+#+LATEX_HEADER: % \usepackage{natbib}
+#+LATEX_HEADER: \usepackage{siunitx}
+#+OPTIONS: <:nil c:nil todo:t toc:nil H:5
+#+TITLE: Pulsations of the ZZ Ceti star J1903+6035
+#+AUTHOR: Andrew Ivanov, Nian Tong
+\begin{abstract}
+We confirm the newly discovered \cite{Vincent_2020} pulsations of the J1903+6035 white dwarf
+using the 0.5-m Astrophysical Research Consortium Small Aperture Telescope (ARCSAT).
+In 2020, Vincent et al., acquired high-speed photometric observation of J1903+6035
+and produced a light curve with complex features and a dominant \SI{726}{\second} pulsation mode;
+their use of a 2.6-m telescope allowed for fast \SI{10}{\second} exposures, which made producing
+a light curve relatively easy. In this work we demonstrate the possibility of observing
+pulsations of high-amplitude ZZ Ceti stars having dominant mode periods of \SI{500}{\second} and longer
+through small-diameter telescopes requiring significantly longer exposures (approx. \SI{100}{\second}).
+We demonstrate a possible data reduction approach and discuss its applicability when observing similar
+objects. Finally, we provide a brief survey of several physical models describing ZZ Ceti pulsators and
+discuss how well they describe the observed behavior of J1903+6035.
+\end{abstract}
+* Introduction
+  Pulsations of ZZ Ceti stars provide an excellent window into the
+  properties and evolution of white dwarf stars lying within the
+  instability strip. Typical period of these stars (also known as DAV)
+  range between $\SI{100}{\second}$ and $\SI{2000}{\second}$, and are
+  always a combination of several /g/-mode oscillations. For instance
+  the oscillations, of the first confirmed ZZ Ceti, HL Tau 76, are
+  dominated by two modes with periods \SI{746.2}{\second} and
+  \SI{494.2}{\second}[[cite:Koester_1990]].
+
+  The multi-mode nature of ZZ Ceti star pulsations along with the
+  observed positive correlation between the period and amplitude
+  [[cite:Vincent_2020]] makes producing light curves with reasonable
+  time resolution difficult even for relatively slow pulsators. Our
+  best achievable time resolution of about $\SI{100}{\second}$
+  certainly wouldn't allow resolving all the modes of J1903+6035;
+  however, we demonstrate the possibility of resolving the most
+  prominent mode by means of differential photometry and subsequent
+  Fourier analysis. We confirm that our analysis produces a result
+  consistent with that from Vincent et al., and discuss further steps
+  and improvements to the observation and data reduction techniques
+  which could be helpful to amature astronomers interested in studying
+  DAV white dwarvfs through small telescopes.  
+* Data reduction and analysis
+  The total of 93 raw images were taken with a $\SI{100}{\second}$
+  exposure and through the ~sdss_g~ filter. Bias has been subtracted
+  from each gain-corrected image and after that flat-field correction
+  was performed. To perform differential photometry, we chose 12
+  reference stars not sigficantly different from J1903+6035 in their
+  apparent magnitude using one of the images as the reference frame
+  (Figure [[fig:field]]).
+
+  #+CAPTION: Annotated field of view. Stars labeled as #xx are the reference stars,
+  #+CAPTION: whereas those labeled as Cx are supposedly non-variable control stars.
+  #+NAME: fig:field
+  [[./img/field.png]]
+
+  Due to a significant variation in the positions of the stars in
+  different frames taken over the course of observation, it was
+  necessary to compute a homography transformation between each of the
+  frames and the reference frame. This was done using the ~astroalign~
+  Python module. Generally, results were good to about 1-2 pixels; to
+  further improve the signal-to-noise ratio the coordinats of each
+  star were optimized by fitting a narrow 2D Gaussian near the
+  frame-shift-corrected location of the star.
+
+  The differential photometry procedure was performed as follows: the
+  flux (in the units of $e^-$) was computed via aperture photometry
+  method for the main and reference stars in each of the frames; then
+  the relative flux of the main star was determined as the ratio of
+  its flux and the average flux of all the reference stars. This
+  produced the light curve shown in Figure [[fig:lc]].
+
+  #+CAPTION: Light curve of J1903+6035.
+  #+NAME: fig:lc
+  [[./img/lightcurve.png]]
+
+  As seen from the light curve in Figure [[fig:lc]], typical time
+  intervals between successive measurements were approximately uniform
+  ($117\pm10\SI{}{\second}$), so it isn't unreasonable to attempt
+  producing a power spectrum via Fast Foutier Transform (FFT). The
+  result is shown in Figure [[fig:ps]].
+  
+  #+CAPTION: Power spectrum of the relative magnitude of J1903+6035.
+  #+NAME: fig:ps
+  [[./img/power.png]]
+
+  It is quite clear that the power spectrum is strongest near
+  $f\approx\SI{1.3}{\milli\hertz}$, which corresponds to the period of
+  about $\SI{770}{\second}$. There's another somewhat prominent
+  feature in the power spectrum near $f\approx\SI{2.2}{\milli\hertz}$,
+  which corresponds to the period of about $\SI{450}{\second}$. Due to
+  a technical issue, there was a discontinuity in the light curve data
+  with multiple missing data points (see Figure [[fig:lc]], near
+  $t\approx\SI{5000}{\second}$). It needs more investigation how that
+  affected the power spectrum and if it would help imputing the
+  missing data points. However, we will not puruse Fourier analysis
+  any further because the Lomb-Scargle periodogram would be a more
+  appropriate technique for deriving the period from this data.
+
+  A Lomb-Scargle periodogram obtained from the light curve in Figure
+  [[fig:lc]] is shown in Figure [[fig:ls]]. Note that it echoes the periously
+  discussed power spectrum confirming the presense of a statistically
+  significant dominant mode with period of $\SI{763}{\second}$ and
+  another prominent (but not statistically significant) mode with a
+  period near $\SI{450}{\second}$.
+
+  #+CAPTION: Lomb-Scargle periodogram of the relative magnitude of J1903+6035.
+  #+NAME: fig:ls
+  [[./img/ls_periodogram.png]]
+
+  To further validate the statistical significance of this result and
+  confirm that it didn't arise from an error in the analysis or some
+  unknown digital artifact, we perform the same data reduction
+  procedue again, but having J1903+6035 replaced with different
+  (supposedly non-variable) stars. These "control group" stars are
+  maked as C1 and C2 in Figure [[fig:field]]. The resulting light curves,
+  power spectra and Lomb-Scargle periodograms are shown in Figures
+  [[fig:lc1]] - [[fig:ls3]]. (Some of these figures will be combined and
+  presented as subplots. For now, just pesenting everythign as is.)
+
+
+  It is obvious that the lightcurves for stars C1 and C3 have strongly
+  correlated (TODO: quantify correlation) slow frequency oscillations
+  ($\SI{2000}{\second} < P < \SI{3000}{\second}$), which also show up
+  in the corresponding power spectra and periodograms (however, the
+  statistical significance reported by the Lomb-Scargle analysis is
+  low because the number of captured periods would be less than 5). It
+  is not clear what is the sourse of this variation, but it's most
+  certainly artificial. The fact that no control star exhibited any
+  even slightly statistically significant variation with a frequency
+  close to the one determined for J1903+6035 suggests that detected
+  variation was not due to any artificial signal and is, indeed, due
+  to the actual variation in brightness.
+
+  Comments: Most of the effort when preparing this draft was put into
+  reducing the data and trying to determine whether there was any
+  signal. The SNR is very low, so this took some careful data
+  reduction. At this point I am quite confident that there's
+  statistically significant signal (yay!), so the path forward seems
+  pretty clear. The TODO items below should give the general idea
+  where this will be going next.
+
+  #+CAPTION: Light curve for star C1.
+  #+NAME: fig:lc1
+  [[./img/lightcurve_C1.png]]
+  #+CAPTION: Light curve for star C2.
+  #+NAME: fig:lc2
+  [[./img/lightcurve_C2.png]]
+  #+CAPTION: Light curve for star C3.
+  #+NAME: fig:lc3
+  [[./img/lightcurve_C3.png]]
+
+
+  #+CAPTION: Power spectrum of the relative magnitude of star C1.
+  #+NAME: fig:ps1
+  [[./img/power_C1.png]]
+
+  #+CAPTION: Power spectrum of the relative magnitude of star C2.
+  #+NAME: fig:ps2
+  [[./img/power_C2.png]]
+
+  #+CAPTION: Power spectrum of the relative magnitude of star C3.
+  #+NAME: fig:ps3
+  [[./img/power_C3.png]]
+
+
+  #+CAPTION: Lomb-Scargle periodogram of the relative magnitude of star C1.
+  #+NAME: fig:ls1
+  [[./img/ls_periodogram_C1.png]]
+
+  #+CAPTION: Lomb-Scargle periodogram of the relative magnitude of star C2.
+  #+NAME: fig:ls2
+  [[./img/ls_periodogram_C2.png]]
+
+  #+CAPTION: Lomb-Scargle periodogram of the relative magnitude of star C3.
+  #+NAME: fig:ls3
+  [[./img/ls_periodogram_C3.png]]
+
+  
+** TODO The uncertainties are fake at this point. Need to propagate properly.
+** TODO Make the final estimate of the period of the dominant mode with uncertainty
+** TODO (Optional) Produce a light curve via PSF photometry, try more reference stars to improve SNR
+* Discussion
+** TODO Provide a survey and references to the modern theory of DAV pulsators
+** TODO Discuss where J1903+6035 fits using currents results and results from [[cite:Vincent_2020]] and [[cite:Limoges_2015]]
+** TODO Compare the results with [[cite:Vincent_2020]] and address discrepancies
+** TODO Discuss limitations and further improvements to the approach
+* References
+  :PROPERTIES:
+  :UNNUMBERED: t
+  :END:
+  #+LaTeX: \nocite{*} \printbibliography[heading=none]
+  #+LaTeX: %\nocite{*} \bibliography{refs}
+* Unsorted                                                         :noexport:
+  Use this for photometry
+  https://photutils.readthedocs.io/en/stable/index.html
+  https://arxiv.org/pdf/2105.00905.pdf
+  https://link-springer-com.offcampus.lib.washington.edu/content/pdf/10.1007/s12036-020-09628-9.pdf
