@@ -1,0 +1,234 @@
+#+TITLE: ASTR480: Lab 5. Reducing Imaging Data
+#+SETUPFILE: C:/Users/andre/AppData/Roaming/org/hw_setup.org
+#+LATEX_HEADER: \usepackage{float}
+#+OPTIONS: H:3
+* Data reduction
+  The source code related to this analysis is posted under
+  [[https://github.com/wdecay/ASTR480/tree/master/lab5]].
+** Bias & overscan
+*** Q1
+    Bias arises from a constant voltage applied to CCD and it always
+    present even without any exposure. All CCD chips have some
+    non-uniform structure due to physical irregularities, so the bias
+    manifests itself as noise with regular features like that shown in
+    Figure [[fig:bias]]. In contrast with dark frames, bias signal is not
+    proportional to the exposure time, but is always present regardless
+    of the exposure.
+
+    #+CAPTION: Master bias from the ARCSAT instrument (in units of $e^-$).
+    #+NAME: fig:bias
+    #+ATTR_LATEX: :width 0.7\linewidth
+    [[./img/bias.png]]
+
+    Taking bias into account means combining multiple bias frames into
+    an averaged master bias frame and subtracting it from images to
+    compensate for this unwanted signal.
+   
+*** Q2
+    The master bias shown in Figure [[fig:bias]] was produced using
+    ~ccdproc~ Python module using 22 bias files from the ARCSAT
+    instrument. The reason multiple bias frames are used is to ensure
+    that the read noise is averaged out in the composite master bias.
+
+    An example of a raw data frame with bias subtracted is shown in
+    Figure [[fig:bias_subtract]]. It is a little difficult to see the
+    difference, but the image on the right is visibly lighter (which
+    means overall lower counts not that the bias is subtracted).
+
+    #+CAPTION: The image on the left is the raw image; the image on the right has bias subtracted.
+    #+NAME: fig:bias_subtract
+    [[./img/bias_subtracted.png]]
+   
+*** Q3
+    In units of ADU, the average values for each of the 22 bias frames
+    are: 1309.34, 1309.30, 1309.27, 1309.26, 1309.24, 1309.27, 1309.24,
+    1309.31, 1309.31, 1309.24, 1309.23, 1308.41, 1308.35, 1308.38,
+    1308.42, 1308.39, 1308.36, 1308.38, 1308.40, 1308.34, 1308.37,
+    1308.38. The average value of the master bias frame is: 1308.89.
+
+    Note that the ~ccdproc~ documentation recommends gain-correcting
+    all images, or converting the values from ADU to electrons. The
+    analysis in the final project was performed following this
+    guidance.
+
+*** Q4
+    Overscan is a part of the chip not exposed to light. It is
+    digitally added vertically (and also horizontally, but as a more
+    narrow strip) across the center of the image. It does not
+    represent physical pixels. Its purpose is to detect small
+    variation in the bias level across different frames so that
+    appropriate correction can be applied.
+
+    The images taken as part of my project did not contain overscan, so
+    Figure [[fig:overscan]] shows the result of overscan removal from
+    ~wolf1346.0001.f.fits~.
+
+    #+CAPTION: Overscan removal using ~ccdproc~ and ~numpy~.
+    #+NAME: fig:overscan
+    [[./img/overscan.png]]
+
+   
+*** Q5
+    The overscan parameters can be read from the FITS header. The
+    relevant fields are the following:
+ #+BEGIN_EXAMPLE
+ {'CSEC11': '[1:2048,1:2048]',
+  'DSEC11': '[3:1026,1:1024]',
+  'BSEC11': '[1029:1051,1:1024]',
+  'CSEC12': '[1:2048,2049:4096]',
+  'DSEC12': '[3:1026,1027:2050]',
+  'BSEC12': '[1029:1051,1027:2050]',
+  'CSEC21': '[2049:4096,1:2048]',
+  'DSEC21': '[1077:2100,1:1024]',
+  'BSEC21': '[1052:1074,1:1024]',
+  'CSEC22': '[2049:4096,2049:4096]',
+  'DSEC22': '[1077:2100,1027:2050]',
+  'BSEC22': '[1052:1074,1027:2050]'}
+ #+END_EXAMPLE
+    CSECxx represent unbinned data sections, DSECxx represent binned
+    data sections and BSECxx represent bias (overscan) sections. The
+    trimmed image in Figure [[fig:overscan]] was produced by simply
+    extracting the binned data sections one by one and concatenating
+    them into one large image. (The image was taken with 2x2 binning.)
+
+** Flat fields
+*** Q6
+    Our project's data was taken with the ~sdss_g~ filter. No other
+    filters were used. We acquired the following 3 flat field frames:
+  #+BEGIN_EXAMPLE
+  data/flats/domeflat_sdss_g_001-2.fits
+  data/flats/domeflat_sdss_g_002-2.fits
+  data/flats/domeflat_sdss_g_003-2.fits
+  #+END_EXAMPLE
+  These files will be combined to produce a single master flat frame,
+  so there are no "extra" flat fields.
+
+*** Q7
+    One reason is that CCD response is different for different
+    wavelengths (bands), so when working in a specific band, we needs
+    flats for that specific band to get appropriate CCD
+    response. Another reason is that the filter can introduce optical
+    aberrations due to manufacturing defects or presence of
+    dust. These aberations can also be corrected for when flat fields
+    taken with that filter are available.
+
+    #+CAPTION: Scaled master flat field for the ~sdss_g~ filter and flat-field-corrected image.
+    #+NAME: fig:flat
+    [[./img/flat_correction.png]]
+
+* Data analysis (photometry)
+** Q8
+   When sky is subtracted on the fly while performing aperture
+   photometry, only a small patch of the image is used to estimate the
+   sky. This may be problematic when there are many cosmic ray hits
+   (common when the exposures are long) or the field has many closely
+   positioned stars. Cosmic rays or nearby objects can skew the
+   background estimator (which can be particularly problematic when
+   performing time series analysis), so this technique should be used
+   with caution.
+** Q9
+   Sky subtraction matters because we want to estimate the flux of the
+   source and exclude any glow from unresolved astronomical objects
+   and the atmosphere. This glow is often not uniform across the
+   entire image, so it is typically not sufficient to simply subtract
+   the mean value; instead, the sky needs to be estimated for each
+   pixel in the image.
+   
+** Q10
+   Figure [[fig:sources]] shows the objects identified with
+   ~DAOStarFinder~. There is a total of 45 stars. Whether this is a
+   reasonable number depends on what is the question we want to
+   answer, but apart from that ~DAOStarFinder~ performed well on this
+   image. The sensitivity of the finder can be adjusted via its ~fwhm~
+   and ~threshold~ parameters; the former determines how "large" the
+   stars are expected to be and the latter determines how bright they
+   are in terms of the number of "sigmas" above the background.
+   
+    #+CAPTION: Sources identified in an image. ~DAOStarFinder~ found 45 sources
+    #+CAPTION: of which 15 were manually removed from the list.
+    #+NAME: fig:sources
+   [[./img/sources.png]]
+
+
+** Q11
+    #+CAPTION: Aperture values with different pixel overlap handling.
+    #+CAPTION: (a) Exact, (b) Center, (c) Subpixel with 5 subpixels.
+    #+NAME: fig:aperture
+   [[./img/aperture.png]]
+
+
+    Figure [[fig:aperture]] shows the estimated apertures for the 30 stars
+    selected earlier. The values are very close for all 3 methods;
+    however, "exact" and "subpixel" methods seem to be more
+    consistent. This isn't surprising, because "subpixel" which
+    divides pixels into smaller chunks is more accurate than "center,"
+    which only considers whether the center of each pixel is inside or
+    outside the aperture. The problem with this method is that it
+    doesn't subtract the background, so these values must be grossly
+    overestimated.
+
+** Q12
+   The flux values, indeed, were grossly overestimated, as can be seen
+   by comparing the values in Figure [[fig:annulus]] to the corresponding
+   values in Figure [[fig:aperture]]. The stars in this image are very
+   faint (magnitude ~15), so the background is of about the same order
+   as the signal.
+   
+   #+CAPTION: Flux with local background subtraction via ~CircularAnnulus~.
+   #+CAPTION: The aperture radius was set to 5 pixels, and the inner and outer
+   #+CAPTION: radii of the circular annulus were set to 7 and 15 pixels, respectively.
+   #+CAPTION: Pixel overlap was handled by the "exact" method.
+   #+NAME: fig:annulus
+   [[./img/annulus.png]]
+
+** Q13
+   In Figure [[fig:psf]] the output of PSF photometry is compared with
+   that of aperture photometry. The PSF (or more accurately, PRF)
+   model is ~IntegratedGaussianPRF~ with the ~MMMBackground~
+   estimator. According to the ~photutils~ documentation,
+   "[background] subtraction is done during the photometry process" as
+   long as a background estimator is provided. The model was set up to
+   allow optimizing for the ~sigma~ parameter.
+   
+   #+CAPTION: PSF fitting and aperture photometry comparison.
+   #+CAPTION: The number in black is the output of PSF photometry,
+   #+CAPTION: the number in blue is the change relative to the output of aperture photometry (Figure [[fig:annulus]]).
+   #+NAME: fig:psf
+   [[./img/psf_photometry.png]]
+
+   Clearly the outputs of PSF fitting and aperture photometry differ
+   and sometimes quite substantially (up to almost 10%). There are
+   many stars in the field that are quite different in magnitude, so
+   aperture photometry with the same radius is a rather crude method
+   for estimating their flux. It seems that for fainter stars aperture
+   photometry tends to return a smaller value than the PSF, whereas
+   for brighter ones it is the other way around. This is a little
+   counter-intuitive and possibly indicates that the PSF is not
+   actually Gaussian (i.e., the peak flux is not focused at the
+   center).
+
+** Q14
+   I need to measure flux of many objects in many (> 100) images to
+   perform differential photometry. The main challenge is that the
+   data set is not very high-quality. The focus has been changing
+   during the observation and there was obvious astigmatism in the
+   images. In addition to that, the positions of the stars shifts
+   somewhat from frame to frame (sometimes quite substantially). It is
+   necessary to match stars exactly such that meaningful time series
+   analysis can be performed on the reduced data. That said, all the
+   techniques explored in this lab still apply to my data reduction
+   and analysis. I just needed to do a little more fine-tuning.
+** Q15
+   It is difficult to say whether PSF photometry or aperture
+   photometry performed better on this data set. Because of the
+   varying PSF across different images, I preferred aperture
+   photometry because it seemed less affected by the variation in the
+   focus and degree of astigmatism. So, perhaps, aperture photometry
+   makes more sense when it is difficult to accurately determine the
+   correct PSF, and in particular when the PSF is inconsistent across
+   the entire data set. When images of consistent (and preferably
+   good) quality are available, PSF may be a better choice because it
+   generally produces less noisy results with smaller
+   uncertainties. For example, when performing absolute photometry, it
+   is likely necessary to put extra effort in computing the most
+   appropriate PSF to achieve the best accuracy.
